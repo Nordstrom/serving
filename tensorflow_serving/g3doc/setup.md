@@ -199,11 +199,14 @@ SSL support is enabled in this version, but to turn it back off, recompile after
 adding in _unsecure in tensorflow_serving/workspace.bzl:
 ```
   name = "grpc_lib",
-  actual = "@grpc//:grpc++"
+  actual = "@grpc//:grpc++_unsecure"
+```
+To reenable SSL:
 ```
 sed -i '' 's/c\+\+_unsecure/c++/g' tensorflow_serving/workspace.bzl
 ```
 
-Then, build the server with the bazel define `GRPC_MODE=secure`:
-```shell
+Build the server with the bazel define `GRPC_MODE=secure` to complete SSL support:
+```
 bazel build -c opt --define GRPC_MODE=secure //tensorflow_serving/model_servers:tensorflow_model_server
+```
