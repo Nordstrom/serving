@@ -32,7 +32,7 @@ limitations under the License.
 //     tensorflow_serving/batching/batching_session.h
 //
 // To serve a single model, run with:
-//     $path_to_binary/tensorflow_model_server \
+//     $path_to_binary/tensorflow_model_server
 //     --model_base_path=[/tmp/my_model | gs://gcs_address]
 // IMPORTANT: Be sure the base path excludes the version directory. For
 // example for a model at /tmp/my_model/123, where 123 is the version, the base
@@ -42,7 +42,6 @@ limitations under the License.
 // To specify port (default 8500): --port=my_port
 // To enable batching (default disabled): --enable_batching
 // To override the default batching parameters: --batching_parameters_file
-
 #include <unistd.h>
 #include <iostream>
 #include <memory>
@@ -56,7 +55,6 @@ limitations under the License.
 #include "grpcpp/server_builder.h"
 #include "grpcpp/server_context.h"
 #include "grpcpp/support/status.h"
-#include "tensorflow/c/c_api.h"
 #include "tensorflow/cc/saved_model/tag_constants.h"
 #include "tensorflow/core/lib/core/status.h"
 #include "tensorflow/core/lib/strings/numbers.h"
@@ -77,7 +75,6 @@ limitations under the License.
 #include "tensorflow_serving/model_servers/model_service_impl.h"
 #include "tensorflow_serving/model_servers/platform_config_util.h"
 #include "tensorflow_serving/model_servers/server_core.h"
-#include "tensorflow_serving/model_servers/version.h"
 #include "tensorflow_serving/servables/tensorflow/classification_service.h"
 #include "tensorflow_serving/servables/tensorflow/get_model_metadata_impl.h"
 #include "tensorflow_serving/servables/tensorflow/multi_inference_helper.h"
@@ -125,19 +122,19 @@ using tensorflow::serving::PredictionService;
 namespace {
 
 tensorflow::Status LoadTextFile(const string& file, string* dest) {
-   std::unique_ptr<tensorflow::ReadOnlyMemoryRegion> file_data;
-   TF_RETURN_IF_ERROR(
-       tensorflow::Env::Default()->NewReadOnlyMemoryRegionFromFile(file,
-                                                                   &file_data));
-   dest->assign(static_cast<const char*>(file_data->data()),
+  std::unique_ptr<tensorflow::ReadOnlyMemoryRegion> file_data;
+  TF_RETURN_IF_ERROR(
+      tensorflow::Env::Default()->NewReadOnlyMemoryRegionFromFile(file,
+                                                                  &file_data));
+  dest->assign(static_cast<const char*>(file_data->data()),
                  file_data->length());
-   return tensorflow::Status::OK();
-   }
+    return tensorflow::Status::OK();
+  }
 
   tensorflow::Status ParseProtoTextFile(const string& file,
-                                      google::protobuf::Message* message) {
-  string file_data_str;
-  TF_RETURN_IF_ERROR(LoadTextFile(file, &file_data_str));
+                                        google::protobuf::Message* message) {
+    string file_data_str;
+    TF_RETURN_IF_ERROR(LoadTextFile(file, &file_data_str));
   if (tensorflow::protobuf::TextFormat::ParseFromString(file_data_str,
                                                         message)) {
     return tensorflow::Status::OK();
@@ -310,7 +307,6 @@ void RunServer(int port, std::unique_ptr<ServerCore> core, bool use_saved_model,
   tensorflow::serving::ModelServiceImpl model_service(core.get());
   PredictionServiceImpl prediction_service(core.get(), use_saved_model);
   ServerBuilder builder;
-  std::shared_ptr<grpc::ServerCredentials> creds = InsecureServerCredentials();
   builder.AddListeningPort(server_address, creds);
   builder.RegisterService(&model_service);
   builder.RegisterService(&prediction_service);
@@ -391,7 +387,6 @@ int main(int argc, char** argv) {
   string model_config_file;
   string grpc_channel_arguments = "";
   bool enable_model_warmup = true;
-  bool display_version = false;
   std::vector<tensorflow::Flag> flag_list = {
       tensorflow::Flag("port", &port, "Port to listen on for gRPC API"),
       tensorflow::Flag("rest_api_port", &http_options.port,
@@ -439,19 +434,20 @@ int main(int argc, char** argv) {
                        "Tensorflow session. Auto-configured by default."
                        "Note that this option is ignored if "
                        "--platform_config_file is non-empty."),
- #ifdef USE_GRPC_SECURE
+
+#ifdef USE_GRPC_SECURE
       tensorflow::Flag("key_file", &key_file,
-                        "If non-empty, a file containing a private key in PEM "
-                        "format to use when serving. If non-empty, --cert_file "
-                        "must be provided."),
+                       "If non-empty, a file containing a private key in PEM "
+                       "format to use when serving. If non-empty, --cert_file "
+                       "must be provided."),
       tensorflow::Flag("cert_file", &cert_file,
-                        "If non-empty, a file containing a public certificate "
-                        "in PEM format to use when serving. If non-empty, "
-                        "--key_file must be provided."),
+                       "If non-empty, a file containing a public certificate "
+                       "in PEM format to use when serving. If non-empty, "
+                       "--key_file must be provided."),
       tensorflow::Flag("ca_file", &ca_file,
-                        "If non-empty, the root CA file to use with the "
-                        "provided cert and key. Ignored if --key_file and "
-                        "--cert_file are unset."),
+                       "If non-empty, the root CA file to use with the "
+                       "provided cert and key. Ignored if --key_file and "
+                       "--cert_file are unset."),
 #endif
       tensorflow::Flag("platform_config_file", &platform_config_file,
                        "If non-empty, read an ascii PlatformConfigMap protobuf "
@@ -474,16 +470,10 @@ int main(int argc, char** argv) {
       tensorflow::Flag("enable_model_warmup", &enable_model_warmup,
                        "Enables model warmup, which triggers lazy "
                        "initializations (such as TF optimizations) at load "
-                       "time, to reduce first request latency."),
-      tensorflow::Flag("version", &display_version, "Display version")};
+                       "time, to reduce first request latency.")};
+
   string usage = tensorflow::Flags::Usage(argv[0], flag_list);
   const bool parse_result = tensorflow::Flags::Parse(&argc, argv, flag_list);
-  if (parse_result && display_version) {
-    std::cout << "TensorFlow ModelServer: " << TF_MODELSERVER_VERSION_STRING
-              << "\n"
-              << "TensorFlow Library: " << TF_Version() << "\n";
-    return 0;
-  }
   if (!parse_result || (model_base_path.empty() && model_config_file.empty())) {
     std::cout << usage;
     return -1;
@@ -552,30 +542,32 @@ int main(int argc, char** argv) {
   options.flush_filesystem_caches = flush_filesystem_caches;
 
   if ((!key_file.empty() || !cert_file.empty()) &&
-     key_file.empty() != cert_file.empty()) {
-    std::cout << "must specify both --key_file and --cert_file" << "\n";
-    return -1;
-  }
-
-  // Create credential options.
-  std::shared_ptr<grpc::ServerCredentials> creds;
-  if (key_file.empty()) {
-    creds = InsecureServerCredentials();
-  } else {
-    grpc::SslServerCredentialsOptions sslOptions(GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY);
-    string keyPem, certPem;
-    TF_CHECK_OK(LoadTextFile(key_file, &keyPem));
-    TF_CHECK_OK(LoadTextFile(cert_file, &certPem));
-    grpc::SslServerCredentialsOptions::PemKeyCertPair keyPair = {
-      keyPem,
-      certPem
-    };
-    sslOptions.pem_key_cert_pairs.push_back(keyPair);
-    if (!ca_file.empty()) {
-      TF_CHECK_OK(LoadTextFile(ca_file, &sslOptions.pem_root_certs));
+        key_file.empty() != cert_file.empty()) {
+      std::cout << "must specify both --key_file and --cert_file" << "\n";
+      return -1;
     }
-    creds = grpc::SslServerCredentials(sslOptions);
-  }
+
+    // Create credential options.
+    std::shared_ptr<grpc::ServerCredentials> creds;
+    if (key_file.empty()) {
+      creds = InsecureServerCredentials();
+    } else {
+      grpc::SslServerCredentialsOptions sslOptions(GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY);
+      string keyPem, certPem;
+      TF_CHECK_OK(LoadTextFile(key_file, &keyPem));
+      TF_CHECK_OK(LoadTextFile(cert_file, &certPem));
+      grpc::SslServerCredentialsOptions::PemKeyCertPair keyPair = {
+        keyPem,
+        certPem
+      };
+      sslOptions.pem_key_cert_pairs.push_back(keyPair);
+      if (!ca_file.empty()) {
+        TF_CHECK_OK(LoadTextFile(ca_file, &sslOptions.pem_root_certs));
+      }
+      creds = grpc::SslServerCredentials(sslOptions);
+    }
+
+
   std::unique_ptr<ServerCore> core;
   TF_CHECK_OK(ServerCore::Create(std::move(options), &core));
   RunServer(port, std::move(core), use_saved_model, grpc_channel_arguments,
