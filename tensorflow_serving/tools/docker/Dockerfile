@@ -1,5 +1,3 @@
-# Copyright 2018 Google LLC
-#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,8 +10,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 FROM ubuntu:16.04
-
-LABEL maintainer="gvasudevan@google.com"
 
 RUN apt-get update && apt-get install -y \
         curl \
@@ -40,8 +36,6 @@ EXPOSE 8500
 EXPOSE 8501
 
 # Set where models should be stored in the container
-ENV MODEL_BASE_PATH=/models
-RUN mkdir -p ${MODEL_BASE_PATH}
 
 # The only required piece is the model name in order to differentiate endpoints
 ENV MODEL_NAME=model

@@ -210,3 +210,6 @@ Build the server with the bazel define `GRPC_MODE=secure` to complete SSL suppor
 ```
 bazel build -c opt --define GRPC_MODE=secure //tensorflow_serving/model_servers:tensorflow_model_server
 ```
+Then, to run the server in SSL mode, launch a model (here, with Amazon S3 holding a model config file, though it could be stored locally) like this:
+```tensorflow_model_server --port=8443 --model_config_file=s3://nonprod-models-beta/demos/mnist/config.pb --model_name=my_model --model_base_path=s3://nonprod-models-beta/demos/mnist  --key_file=server.key --cert_file=server.crt```
+Optionally, you may also include a ```--ca_file```.
